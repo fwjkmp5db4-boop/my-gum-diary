@@ -4,248 +4,345 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101827">
-<title>Мой зал — фитнес-дневник</title>
+<title>Мой дневник тренировок</title>
 <style>
+:root{--bg:#10141c;--panel:#1b2330;--muted:#9ba8ba;--text:#f4f6fa;--accent:#65d6a3;--line:#303b4c}
 *{box-sizing:border-box}
-body{margin:0;background:#101827;color:#f4f6fa;font:16px -apple-system,BlinkMacSystemFont,sans-serif;padding:18px}
-main{max-width:650px;margin:auto}
-h1{font-size:27px;margin:8px 0}
-h2{font-size:19px}
-p{color:#aab6c8}
-.card{background:#1b293b;border:1px solid #304158;border-radius:16px;padding:16px;margin:14px 0}
-button{border:0;border-radius:11px;padding:12px;background:#293a50;color:white;font-weight:700;font-size:15px;cursor:pointer}
-button.active,.primary{background:#69d6a2;color:#10251b}
-.tabs{display:flex;gap:8px;margin:18px 0}
-.tabs button{flex:1}
-.progress{height:9px;background:#304158;border-radius:9px;overflow:hidden;margin:10px 0}
-.progress div{height:100%;background:#69d6a2;width:0}
-.exercise{padding:14px 0;border-bottom:1px solid #304158}
+body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:22px 16px 12px;max-width:850px;margin:auto}
+h1{font-size:25px;margin:0 0 6px}
+h2{font-size:20px;margin:8px 0 14px}
+h3{font-size:16px;margin:8px 0}
+p,.muted{color:var(--muted)}
+main{max-width:850px;margin:auto;padding:0 14px 40px}
+nav{display:flex;gap:7px;overflow:auto;padding:10px 0 16px}
+button{border:0;border-radius:11px;padding:11px 14px;background:#293548;color:white;font-weight:600;font-size:14px;cursor:pointer}
+button.active,.primary{background:var(--accent);color:#102018}
+button:disabled{opacity:.4}
+.tab{display:none}.tab.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
+.exercise{padding:13px 0;border-bottom:1px solid var(--line)}
 .exercise:last-child{border:0}
-.exhead{display:flex;gap:10px;align-items:center}
-.exhead input{width:22px;height:22px;accent-color:#69d6a2}
-.exname{font-weight:700}
-.small{font-size:13px;color:#aab6c8;margin-top:4px}
-.set{display:grid;grid-template-columns:65px 1fr 1fr;gap:8px;align-items:center;margin:9px 0 0 32px}
-input,textarea{width:100%;background:#101827;color:white;border:1px solid #40516a;border-radius:9px;padding:10px;font-size:16px;min-width:0}
-textarea{min-height:75px}
-.previous{font-size:12px;color:#f2c66d;margin:8px 0 0 32px}
-.primary{width:100%;padding:15px;font-size:16px;margin-top:10px}
-.muted{color:#aab6c8;font-size:13px;line-height:1.5}
-.item{border-bottom:1px solid #304158;padding:13px 0}
-.hidden{display:none}
+.exercise-head{display:flex;align-items:center;gap:10px}
+.exercise-head strong{flex:1}
+input,select,textarea{background:#101722;color:white;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:15px;min-width:0;width:100%}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+.setrow{display:grid;grid-template-columns:30px 1fr 1fr;gap:7px;align-items:center;margin:8px 0}
+.setrow span{color:var(--muted);font-size:13px}
+.small{font-size:12px;color:var(--muted);margin:7px 0}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.stat{background:#111a26;padding:13px;border-radius:12px}
+.stat b{font-size:23px;display:block;margin-top:5px}
+.record{border-bottom:1px solid var(--line);padding:12px 0}
+.record:last-child{border:0}
+canvas{width:100%;height:230px;background:#111a26;border-radius:12px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}
+.day{padding:9px 2px;background:#111a26;border-radius:8px;font-size:13px;min-height:38px}
+.day.done{background:#245a48;color:#fff}
+.day.today{outline:2px solid var(--accent)}
+.dayname{color:var(--muted);font-size:12px;padding:5px 0}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 </style>
 </head>
 <body>
+<header>
+<h1>💪 Мой дневник тренировок</h1>
+<p class="muted">Тренируйся, записывай результаты и следи за прогрессом.</p>
+<nav>
+<button class="active" data-tab="workout">Тренировка</button>
+<button data-tab="history">История</button>
+<button data-tab="calendar">Календарь</button>
+<button data-tab="stats">Статистика</button>
+<button data-tab="weight">Мой вес</button>
+</nav>
+</header>
 <main>
-<h1>Мой зал 💪</h1>
-<p>Твой личный дневник тренировок</p>
 
-<div class="tabs">
-<button class="active" id="tabTrain" onclick="showTab('train')">Тренировка</button>
-<button id="tabHistory" onclick="showTab('history')">История</button>
-<button id="tabStats" onclick="showTab('stats')">Прогресс</button>
+<section id="workout" class="tab active">
+<div class="card">
+<h2>Новая тренировка</h2>
+<div class="row">
+<button class="primary" id="chooseA">Тренировка А</button>
+<button id="chooseB">Тренировка Б</button>
 </div>
+<p class="small">Заполняй вес и повторения для каждого подхода. Предыдущие результаты будут показаны автоматически.</p>
+<div id="exerciseList"></div>
+<label class="small" for="notes">Заметки к тренировке</label>
+<textarea id="notes" rows="2" placeholder="Самочувствие, комментарии..."></textarea>
+<button class="primary" id="saveWorkout" style="width:100%;margin-top:12px">Сохранить тренировку</button>
+</div>
+</section>
 
-<section id="train">
-<div class="tabs">
-<button class="active" id="btnA" onclick="changeWorkout('A')">Тренировка А</button>
-<button id="btnB" onclick="changeWorkout('B')">Тренировка Б</button>
+<section id="history" class="tab">
+<div class="card">
+<h2>История тренировок</h2>
+<div id="historyList"></div>
 </div>
+</section>
+
+<section id="calendar" class="tab">
+<div class="card">
+<h2>Календарь тренировок</h2>
+<div class="row">
+<button id="prevMonth">←</button>
+<strong id="monthTitle" style="text-align:center"></strong>
+<button id="nextMonth">→</button>
+</div>
+<div id="calendarGrid" class="calendar"></div>
+<p class="small">Зелёным отмечены дни, когда ты сохранял тренировку.</p>
+<div id="calendarDetails"></div>
+</div>
+</section>
+
+<section id="stats" class="tab">
+<div class="card">
+<h2>Моя статистика</h2>
+<div class="grid">
+<div class="stat"><span class="muted">Всего тренировок</span><b id="totalWorkouts">0</b></div>
+<div class="stat"><span class="muted">Упражнений записано</span><b id="totalExercises">0</b></div>
+</div>
+<hr>
+<h3>Прогресс по упражнению</h3>
+<select id="exerciseSelect"></select>
+<canvas id="progressChart" width="700" height="300"></canvas>
+<p class="small">График показывает максимальный записанный вес в каждом занятии.</p>
+<hr>
+<h3>Личные рекорды 🏆</h3>
+<div id="recordsList"></div>
+</div>
+</section>
+
+<section id="weight" class="tab">
+<div class="card">
+<h2>Мой вес</h2>
+<div class="row">
+<div><label class="small">Вес, кг</label><input id="bodyWeight" type="number" step="0.1" placeholder="Например, 125.5"></div>
+<div><label class="small">Дата</label><input id="weightDate" type="date"></div>
+</div>
+<button class="primary" id="saveWeight" style="width:100%;margin-top:10px">Добавить запись</button>
+<hr>
+<div class="grid">
+<div class="stat"><span class="muted">Последний вес</span><b id="latestWeight">—</b></div>
+<div class="stat"><span class="muted">Изменение от первой записи</span><b id="weightChange">—</b></div>
+</div>
+<h3 style="margin-top:18px">График веса</h3>
+<canvas id="weightChart" width="700" height="300"></canvas>
+<h3>История веса</h3>
+<div id="weightHistory"></div>
+</div>
+</section>
 
 <div class="card">
-<b>Выполнение: <span id="progressText">0/7</span></b>
-<div class="progress"><div id="progressBar"></div></div>
-<p class="muted">Отмечай упражнения и записывай рабочие веса и повторения.</p>
+<h3>Резервная копия</h3>
+<p class="small">Скачай файл с тренировками и записями веса, чтобы сохранить копию данных.</p>
+<button id="exportData">Экспортировать данные</button>
 </div>
 
-<div class="card" id="exerciseList"></div>
-
-<div class="card">
-<b>Заметки о тренировке</b>
-<textarea id="notes" placeholder="Самочувствие, ощущения, комментарии..."></textarea>
-</div>
-<button class="primary" onclick="saveWorkout()">Сохранить тренировку</button>
-<p class="muted">Работай с запасом 3–4 повторения. Не тренируйся через боль.</p>
-</section>
-
-<section id="history" class="hidden">
-<h2>История занятий</h2>
-<div class="card" id="historyList"></div>
-<button onclick="exportData()">Скачать резервную копию</button>
-</section>
-
-<section id="stats" class="hidden">
-<h2>Твой прогресс</h2>
-<div class="card" id="statsContent"></div>
-<p class="muted">Данные хранятся локально в браузере на этом устройстве.</p>
-<button onclick="exportData()">Экспортировать данные</button>
-</section>
 </main>
-
 <script>
-const plans={
-A:[
-["Разминка на велосипеде","5–7 минут · лёгкий темп",0],
-["Жим ногами","2 × 10–12",2],
-["Тяга верхнего блока","2 × 10–12",2],
-["Жим от груди в тренажёре","2 × 10–12",2],
-["Горизонтальная тяга сидя","2 × 10–12",2],
-["Сгибание ног сидя","2 × 12",2],
-["Кардио в конце","8–12 минут · спокойно",0]
-],
-B:[
-["Разминка на велосипеде","5–7 минут · лёгкий темп",0],
-["Разгибание ног","2 × 12",2],
-["Тяга верхнего блока нейтральным хватом","2 × 10–12",2],
-["Жим от груди в тренажёре","2 × 10–12",2],
-["Горизонтальная тяга сидя","2 × 10–12",2],
-["Сгибание рук на бицепс","2 × 12",2],
-["Разгибание рук на блоке","2 × 12",2],
-["Кардио в конце","8–12 минут · спокойно",0]
-]};
 const KEY="gymDiary_v2";
-let records=[];
-try{records=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){records=[]}
-let workout="A",draft={};
+const WEIGHT_KEY="gymDiary_bodyWeight_v1";
 
-function previous(name){
+const plans={
+A:["Жим ногами","Тяга верхнего блока","Жим от груди в тренажёре","Горизонтальная тяга","Сгибание ног сидя"],
+B:["Разгибание ног","Тяга верхнего блока нейтральным хватом","Жим от груди в тренажёре","Горизонтальная тяга","Сгибание рук на бицепс","Разгибание рук на блоке"]
+};
+
+let records=read(KEY,[]);
+let weights=read(WEIGHT_KEY,[]);
+let currentPlan="A";
+let calendarDate=new Date();
+let draft=[];
+
+function read(key,fallback){
+ try{return JSON.parse(localStorage.getItem(key)||"null")||fallback}catch(e){return fallback}
+}
+function saveAll(){
+ localStorage.setItem(KEY,JSON.stringify(records));
+ localStorage.setItem(WEIGHT_KEY,JSON.stringify(weights));
+}
+function today(){return new Date().toISOString().slice(0,10)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmt(date){return new Date(date+"T12:00:00").toLocaleDateString("ru-RU")}
+function previousFor(name){
  for(let i=records.length-1;i>=0;i--){
-  let ex=records[i].items.find(x=>x.name===name);
-  if(ex&&ex.sets&&ex.sets.length)
-   return records[i].date+": "+ex.sets.map(s=>(s.weight||"—")+" кг × "+(s.reps||"—")).join(", ");
+  const item=(records[i].items||[]).find(x=>x.name===name);
+  if(item)return item;
  }
- return "Пока нет предыдущих результатов";
+ return null;
 }
-
-function render(){
- const list=document.getElementById("exerciseList");
- list.innerHTML="";
- plans[workout].forEach((p,i)=>{
-  const id=workout+i;
-  const d=draft[id]||{done:false,sets:Array.from({length:p[2]},()=>({weight:"",reps:""}))};
-  draft[id]=d;
-  const box=document.createElement("div");
-  box.className="exercise";
-  const head=document.createElement("div");
-  head.className="exhead";
-  const check=document.createElement("input");
-  check.type="checkbox";check.checked=d.done;
-  check.onchange=()=>{d.done=check.checked;progress()};
-  const title=document.createElement("div");
-  title.className="exname";title.textContent=p[0];
-  const meta=document.createElement("div");
-  meta.className="small";meta.textContent=p[1];
-  title.append(meta);head.append(check,title);box.append(head);
-
-  if(p[2]){
-   const prev=document.createElement("div");
-   prev.className="previous";
-   prev.textContent="Прошлый результат: "+previous(p[0]);
-   box.append(prev);
-   d.sets.forEach((s,j)=>{
-    const row=document.createElement("div");row.className="set";
-    const label=document.createElement("span");
-    label.className="small";label.textContent="Подход "+(j+1);
-    const weight=document.createElement("input");
-    weight.type="number";weight.step="0.5";weight.min="0";
-    weight.placeholder="Вес, кг";weight.value=s.weight;
-    weight.inputMode="decimal";
-    weight.oninput=()=>s.weight=weight.value;
-    const reps=document.createElement("input");
-    reps.type="number";reps.min="0";reps.placeholder="Повторы";
-    reps.value=s.reps;reps.inputMode="numeric";
-    reps.oninput=()=>s.reps=reps.value;
-    row.append(label,weight,reps);box.append(row);
-   });
-  }
-  list.append(box);
- });
- document.getElementById("notes").value=draft.notes||"";
- document.getElementById("notes").oninput=e=>draft.notes=e.target.value;
- progress();
+function startWorkout(type){
+ currentPlan=type;
+ document.getElementById("chooseA").classList.toggle("primary",type==="A");
+ document.getElementById("chooseB").classList.toggle("primary",type==="B");
+ draft=plans[type].map(name=>({name,done:false,sets:[{weight:"",reps:""},{weight:"",reps:""}]}));
+ renderExercises();
 }
-
-function progress(){
- const total=plans[workout].length;
- const done=plans[workout].filter((p,i)=>draft[workout+i]?.done).length;
- document.getElementById("progressText").textContent=done+"/"+total;
- document.getElementById("progressBar").style.width=(done/total*100)+"%";
+function renderExercises(){
+ const root=document.getElementById("exerciseList");
+ root.innerHTML=draft.map((item,i)=>{
+  const prev=previousFor(item.name);
+  const prevText=prev?(prev.sets||[]).map(s=>(s.weight||"—")+" кг × "+(s.reps||"—")).join(" / "):"Пока нет предыдущих результатов";
+  return `<div class="exercise">
+   <div class="exercise-head">
+    <input type="checkbox" ${item.done?"checked":""} onchange="draft[${i}].done=this.checked">
+    <strong>${esc(item.name)}</strong>
+   </div>
+   <div class="small">Предыдущий результат: ${esc(prevText)}</div>
+   ${(item.sets||[]).map((s,j)=>`<div class="setrow">
+    <span>Подход ${j+1}</span>
+    <input type="number" min="0" step="0.5" placeholder="Вес, кг" value="${esc(s.weight)}" onchange="draft[${i}].sets[${j}].weight=this.value">
+    <input type="number" min="0" step="1" placeholder="Повторения" value="${esc(s.reps)}" onchange="draft[${i}].sets[${j}].reps=this.value">
+   </div>`).join("")}
+   <button onclick="addSet(${i})">+ Добавить подход</button>
+  </div>`;
+ }).join("");
 }
-function changeWorkout(w){
- workout=w;
- document.getElementById("btnA").classList.toggle("active",w==="A");
- document.getElementById("btnB").classList.toggle("active",w==="B");
- render();
+function addSet(i){
+ draft[i].sets.push({weight:"",reps:""});
+ renderExercises();
 }
-function saveWorkout(){
- const items=plans[workout].map((p,i)=>{
-  const d=draft[workout+i]||{};
-  return {name:p[0],done:!!d.done,sets:d.sets||[]};
- });
- if(!items.some(x=>x.done||x.sets.some(s=>s.weight||s.reps))){
-  if(!confirm("Пока нет отметок и записей. Всё равно сохранить тренировку?"))return;
+document.getElementById("chooseA").onclick=()=>startWorkout("A");
+document.getElementById("chooseB").onclick=()=>startWorkout("B");
+document.getElementById("saveWorkout").onclick=()=>{
+ const items=draft.map(x=>({name:x.name,done:x.done,sets:x.sets.map(s=>({weight:s.weight,reps:s.reps}))}));
+ if(!items.some(x=>x.done||x.sets.some(s=>s.weight!==""||s.reps!==""))){
+  alert("Отметь выполненное упражнение или внеси результаты подходов.");return;
  }
- records.push({
-  id:Date.now(),
-  date:new Date().toLocaleString("ru-RU"),
-  workout,items,notes:draft.notes||""
- });
- try{
-  localStorage.setItem(KEY,JSON.stringify(records));
-  draft={};render();
-  alert("Тренировка сохранена! 💪");
- }catch(e){alert("Не удалось сохранить данные. Сделай экспорт истории и освободи место в браузере.")}
-}
-function showTab(tab){
- ["train","history","stats"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==tab));
- ["Train","History","Stats"].forEach(x=>document.getElementById("tab"+x).classList.toggle("active",x.toLowerCase()===tab));
- if(tab==="history")renderHistory();
- if(tab==="stats")renderStats();
-}
+ records.push({id:Date.now(),date:today(),workout:currentPlan,items,notes:document.getElementById("notes").value});
+ saveAll();
+ document.getElementById("notes").value="";
+ startWorkout(currentPlan);
+ renderAll();
+ alert("Тренировка сохранена! 💪");
+};
+
 function renderHistory(){
- const el=document.getElementById("historyList");el.innerHTML="";
- if(!records.length){el.textContent="История пока пустая. Сохрани первую тренировку!";return}
- records.slice().reverse().forEach(r=>{
-  const d=document.createElement("div");d.className="item";
-  const title=document.createElement("b");
-  title.textContent=(r.workout==="A"?"Тренировка А":"Тренировка Б")+" · "+r.date;
-  d.append(title);
-  const detail=document.createElement("p");
-  detail.className="muted";
-  detail.textContent=r.items.map(x=>{
-   const sets=x.sets?.filter(s=>s.weight||s.reps).map(s=>(s.weight||"—")+" кг × "+(s.reps||"—")).join(", ");
-   return x.name+(sets?": "+sets:"")+(x.done?" ✓":"");
-  }).join(" | ");
-  d.append(detail);
-  if(r.notes){const n=document.createElement("p");n.className="muted";n.textContent="Заметки: "+r.notes;d.append(n)}
-  el.append(d);
- });
+ const root=document.getElementById("historyList");
+ if(!records.length){root.innerHTML="<p>Пока нет сохранённых тренировок.</p>";return}
+ root.innerHTML=[...records].reverse().map(r=>`
+ <div class="record">
+ <strong>${fmt(r.date)} — Тренировка ${esc(r.workout)}</strong>
+ <div class="small">${(r.items||[]).map(x=>esc(x.name)).join(" · ")}</div>
+ ${(r.items||[]).filter(x=>x.done||(x.sets||[]).some(s=>s.weight||s.reps)).map(x=>`<div class="small">${esc(x.name)}: ${(x.sets||[]).map(s=>esc(s.weight||"—")+" кг × "+esc(s.reps||"—")).join(", ")}</div>`).join("")}
+ ${r.notes?`<p class="small">${esc(r.notes)}</p>`:""}
+ </div>`).join("");
+}
+
+function renderCalendar(){
+ const y=calendarDate.getFullYear(),m=calendarDate.getMonth();
+ document.getElementById("monthTitle").textContent=calendarDate.toLocaleDateString("ru-RU",{month:"long",year:"numeric"});
+ const first=new Date(y,m,1),last=new Date(y,m+1,0);
+ const offset=(first.getDay()+6)%7;
+ const workoutDates=new Set(records.map(r=>r.date));
+ let html=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].map(x=>`<div class="dayname">${x}</div>`).join("");
+ for(let i=0;i<offset;i++)html+='<div></div>';
+ for(let d=1;d<=last.getDate();d++){
+  const date=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  const cls=["day",workoutDates.has(date)?"done":"",date===today()?"today":""].join(" ");
+  html+=`<div class="${cls}" onclick="showDay('${date}')">${d}${workoutDates.has(date)?" •":""}</div>`;
+ }
+ document.getElementById("calendarGrid").innerHTML=html;
+}
+function showDay(date){
+ const found=records.filter(r=>r.date===date);
+ document.getElementById("calendarDetails").innerHTML=`<hr><strong>${fmt(date)}</strong>`+
+ (found.length?found.map(r=>`<p>Тренировка ${esc(r.workout)}</p>`).join(""):"<p class='small'>В этот день тренировок нет.</p>");
+}
+document.getElementById("prevMonth").onclick=()=>{calendarDate.setMonth(calendarDate.getMonth()-1);renderCalendar()};
+document.getElementById("nextMonth").onclick=()=>{calendarDate.setMonth(calendarDate.getMonth()+1);renderCalendar()};
+
+function allExerciseNames(){
+ return [...new Set(records.flatMap(r=>(r.items||[]).map(x=>x.name)))].sort();
+}
+function maxWeight(item){
+ return Math.max(0,...(item.sets||[]).map(s=>Number(s.weight)||0));
 }
 function renderStats(){
- const el=document.getElementById("statsContent");el.innerHTML="";
- const a=records.filter(r=>r.workout==="A").length;
- const b=records.filter(r=>r.workout==="B").length;
- const total=document.createElement("h2");total.textContent="Всего тренировок: "+records.length;el.append(total);
- const count=document.createElement("p");count.textContent="Тренировки А: "+a+" · Тренировки Б: "+b;el.append(count);
+ document.getElementById("totalWorkouts").textContent=records.length;
+ document.getElementById("totalExercises").textContent=records.reduce((n,r)=>n+(r.items||[]).filter(x=>x.done).length,0);
+ const names=allExerciseNames(),select=document.getElementById("exerciseSelect");
+ const old=select.value;
+ select.innerHTML=names.length?names.map(n=>`<option>${esc(n)}</option>`).join(""):"<option>Пока нет данных</option>";
+ if(names.includes(old))select.value=old;
+ drawExerciseChart(select.value);
  const best={};
- records.forEach(r=>r.items.forEach(x=>(x.sets||[]).forEach(s=>{
-  const w=Number(s.weight);
-  if(w>0)best[x.name]=Math.max(best[x.name]||0,w);
- })));
- const heading=document.createElement("h3");heading.textContent="Лучшие записанные веса";el.append(heading);
- if(!Object.keys(best).length){const p=document.createElement("p");p.textContent="Запиши рабочие веса — здесь появится прогресс.";el.append(p)}
- Object.entries(best).forEach(([name,weight])=>{
-  const p=document.createElement("p");p.textContent=name+": "+weight+" кг";el.append(p);
+ records.forEach(r=>(r.items||[]).forEach(item=>{
+  const w=maxWeight(item);if(w>(best[item.name]||0))best[item.name]=w;
+ }));
+ document.getElementById("recordsList").innerHTML=Object.keys(best).length?
+ Object.entries(best).sort((a,b)=>b[1]-a[1]).map(([n,w])=>`<div class="record">🏆 <strong>${esc(n)}</strong><br><span class="small">Лучший результат: ${w} кг</span></div>`).join(""):"<p>Рекорды появятся после первых записей.</p>";
+}
+function drawChart(canvas,points){
+ const ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;
+ ctx.clearRect(0,0,w,h);
+ ctx.fillStyle="#111a26";ctx.fillRect(0,0,w,h);
+ if(!points.length){ctx.fillStyle="#9ba8ba";ctx.font="18px sans-serif";ctx.fillText("Пока недостаточно данных",20,45);return}
+ const vals=points.map(p=>p.value),max=Math.max(...vals,1),min=Math.min(0,...vals);
+ const left=42,right=18,top=20,bottom=40,usableW=w-left-right,usableH=h-top-bottom;
+ ctx.strokeStyle="#344255";ctx.lineWidth=1;
+ for(let i=0;i<=4;i++){let y=top+usableH*i/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke()}
+ ctx.fillStyle="#9ba8ba";ctx.font="13px sans-serif";
+ ctx.fillText(String(max),5,top+5);ctx.fillText("0",18,h-bottom+4);
+ const xy=points.map((p,i)=>({x:left+(points.length===1?usableW/2:usableW*i/(points.length-1)),y:top+usableH-(p.value-min)/(max-min||1)*usableH}));
+ ctx.strokeStyle="#65d6a3";ctx.lineWidth=4;ctx.beginPath();
+ xy.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
+ xy.forEach((p,i)=>{ctx.fillStyle="#65d6a3";ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill()});
+ ctx.fillStyle="#9ba8ba";ctx.font="12px sans-serif";
+ if(points.length<=8)xy.forEach((p,i)=>ctx.fillText(points[i].label,p.x-20,h-12));
+ else{ctx.fillText(points[0].label,left,h-12);ctx.fillText(points[points.length-1].label,w-right-45,h-12)}
+}
+function drawExerciseChart(name){
+ const points=[];
+ records.forEach(r=>{
+  const item=(r.items||[]).find(x=>x.name===name);
+  if(item){const value=maxWeight(item);if(value>0)points.push({value,label:fmt(r.date).slice(0,5)})}
  });
+ drawChart(document.getElementById("progressChart"),points);
 }
-function exportData(){
- const blob=new Blob([JSON.stringify(records,null,2)],{type:"application/json"});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");a.href=url;a.download="my-gym-diary-backup.json";a.click();
- URL.revokeObjectURL(url);
+document.getElementById("exerciseSelect").onchange=e=>drawExerciseChart(e.target.value);
+
+function renderWeights(){
+ weights.sort((a,b)=>a.date.localeCompare(b.date));
+ const latest=weights[weights.length-1];
+ document.getElementById("latestWeight").textContent=latest?latest.value+" кг":"—";
+ const change=weights.length>1?latest.value-weights[0].value:null;
+ document.getElementById("weightChange").textContent=change===null?"—":(change>0?"+":"")+change.toFixed(1)+" кг";
+ drawChart(document.getElementById("weightChart"),weights.map(w=>({value:Number(w.value),label:fmt(w.date).slice(0,5)})));
+ document.getElementById("weightHistory").innerHTML=weights.length?[...weights].reverse().map((w,i)=>`<div class="record row"><span>${fmt(w.date)}</span><strong>${w.value} кг</strong><button onclick="deleteWeight('${w.id}')">Удалить</button></div>`).join(""):"<p>Добавь первое измерение веса.</p>";
 }
-render();
+document.getElementById("weightDate").value=today();
+document.getElementById("saveWeight").onclick=()=>{
+ const value=Number(document.getElementById("bodyWeight").value),date=document.getElementById("weightDate").value;
+ if(!value||value<20||value>400||!date){alert("Проверь вес и дату.");return}
+ weights=weights.filter(w=>w.date!==date);
+ weights.push({id:String(Date.now()),date,value});
+ saveAll();document.getElementById("bodyWeight").value="";renderWeights();
+};
+function deleteWeight(id){
+ if(confirm("Удалить эту запись веса?")){weights=weights.filter(w=>w.id!==id);saveAll();renderWeights()}
+}
+
+function renderAll(){renderHistory();renderCalendar();renderStats();renderWeights()}
+document.querySelectorAll("nav button").forEach(btn=>btn.onclick=()=>{
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+ btn.classList.add("active");document.getElementById(btn.dataset.tab).classList.add("active");
+ if(btn.dataset.tab==="stats")renderStats();
+ if(btn.dataset.tab==="calendar")renderCalendar();
+ if(btn.dataset.tab==="weight")renderWeights();
+});
+document.getElementById("exportData").onclick=()=>{
+ const data={workouts:records,bodyWeight:weights,exportedAt:new Date().toISOString()};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="my-gym-diary-backup.json";a.click();URL.revokeObjectURL(url);
+};
+
+startWorkout("A");
+renderAll();
 </script>
 </body>
 </html>

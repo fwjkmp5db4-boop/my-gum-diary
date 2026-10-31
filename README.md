@@ -1,1 +1,1 @@
-# my-gum-diary
+# my-gym-diary

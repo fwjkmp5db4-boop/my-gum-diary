@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Мой зал — фитнес-дневник</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#f4f6fa;font:16px -apple-system,BlinkMacSystemFont,sans-serif;padding:18px}
+main{max-width:650px;margin:auto}
+h1{font-size:27px;margin:8px 0}
+h2{font-size:19px}
+p{color:#aab6c8}
+.card{background:#1b293b;border:1px solid #304158;border-radius:16px;padding:16px;margin:14px 0}
+button{border:0;border-radius:11px;padding:12px;background:#293a50;color:white;font-weight:700;font-size:15px;cursor:pointer}
+button.active,.primary{background:#69d6a2;color:#10251b}
+.tabs{display:flex;gap:8px;margin:18px 0}
+.tabs button{flex:1}
+.progress{height:9px;background:#304158;border-radius:9px;overflow:hidden;margin:10px 0}
+.progress div{height:100%;background:#69d6a2;width:0}
+.exercise{padding:14px 0;border-bottom:1px solid #304158}
+.exercise:last-child{border:0}
+.exhead{display:flex;gap:10px;align-items:center}
+.exhead input{width:22px;height:22px;accent-color:#69d6a2}
+.exname{font-weight:700}
+.small{font-size:13px;color:#aab6c8;margin-top:4px}
+.set{display:grid;grid-template-columns:65px 1fr 1fr;gap:8px;align-items:center;margin:9px 0 0 32px}
+input,textarea{width:100%;background:#101827;color:white;border:1px solid #40516a;border-radius:9px;padding:10px;font-size:16px;min-width:0}
+textarea{min-height:75px}
+.previous{font-size:12px;color:#f2c66d;margin:8px 0 0 32px}
+.primary{width:100%;padding:15px;font-size:16px;margin-top:10px}
+.muted{color:#aab6c8;font-size:13px;line-height:1.5}
+.item{border-bottom:1px solid #304158;padding:13px 0}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Мой зал 💪</h1>
+<p>Твой личный дневник тренировок</p>
+
+<div class="tabs">
+<button class="active" id="tabTrain" onclick="showTab('train')">Тренировка</button>
+<button id="tabHistory" onclick="showTab('history')">История</button>
+<button id="tabStats" onclick="showTab('stats')">Прогресс</button>
+</div>
+
+<section id="train">
+<div class="tabs">
+<button class="active" id="btnA" onclick="changeWorkout('A')">Тренировка А</button>
+<button id="btnB" onclick="changeWorkout('B')">Тренировка Б</button>
+</div>
+
+<div class="card">
+<b>Выполнение: <span id="progressText">0/7</span></b>
+<div class="progress"><div id="progressBar"></div></div>
+<p class="muted">Отмечай упражнения и записывай рабочие веса и повторения.</p>
+</div>
+
+<div class="card" id="exerciseList"></div>
+
+<div class="card">
+<b>Заметки о тренировке</b>
+<textarea id="notes" placeholder="Самочувствие, ощущения, комментарии..."></textarea>
+</div>
+<button class="primary" onclick="saveWorkout()">Сохранить тренировку</button>
+<p class="muted">Работай с запасом 3–4 повторения. Не тренируйся через боль.</p>
+</section>
+
+<section id="history" class="hidden">
+<h2>История занятий</h2>
+<div class="card" id="historyList"></div>
+<button onclick="exportData()">Скачать резервную копию</button>
+</section>
+
+<section id="stats" class="hidden">
+<h2>Твой прогресс</h2>
+<div class="card" id="statsContent"></div>
+<p class="muted">Данные хранятся локально в браузере на этом устройстве.</p>
+<button onclick="exportData()">Экспортировать данные</button>
+</section>
+</main>
+
+<script>
+const plans={
+A:[
+["Разминка на велосипеде","5–7 минут · лёгкий темп",0],
+["Жим ногами","2 × 10–12",2],
+["Тяга верхнего блока","2 × 10–12",2],
+["Жим от груди в тренажёре","2 × 10–12",2],
+["Горизонтальная тяга сидя","2 × 10–12",2],
+["Сгибание ног сидя","2 × 12",2],
+["Кардио в конце","8–12 минут · спокойно",0]
+],
+B:[
+["Разминка на велосипеде","5–7 минут · лёгкий темп",0],
+["Разгибание ног","2 × 12",2],
+["Тяга верхнего блока нейтральным хватом","2 × 10–12",2],
+["Жим от груди в тренажёре","2 × 10–12",2],
+["Горизонтальная тяга сидя","2 × 10–12",2],
+["Сгибание рук на бицепс","2 × 12",2],
+["Разгибание рук на блоке","2 × 12",2],
+["Кардио в конце","8–12 минут · спокойно",0]
+]};
+const KEY="gymDiary_v2";
+let records=[];
+try{records=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){records=[]}
+let workout="A",draft={};
+
+function previous(name){
+ for(let i=records.length-1;i>=0;i--){
+  let ex=records[i].items.find(x=>x.name===name);
+  if(ex&&ex.sets&&ex.sets.length)
+   return records[i].date+": "+ex.sets.map(s=>(s.weight||"—")+" кг × "+(s.reps||"—")).join(", ");
+ }
+ return "Пока нет предыдущих результатов";
+}
+
+function render(){
+ const list=document.getElementById("exerciseList");
+ list.innerHTML="";
+ plans[workout].forEach((p,i)=>{
+  const id=workout+i;
+  const d=draft[id]||{done:false,sets:Array.from({length:p[2]},()=>({weight:"",reps:""}))};
+  draft[id]=d;
+  const box=document.createElement("div");
+  box.className="exercise";
+  const head=document.createElement("div");
+  head.className="exhead";
+  const check=document.createElement("input");
+  check.type="checkbox";check.checked=d.done;
+  check.onchange=()=>{d.done=check.checked;progress()};
+  const title=document.createElement("div");
+  title.className="exname";title.textContent=p[0];
+  const meta=document.createElement("div");
+  meta.className="small";meta.textContent=p[1];
+  title.append(meta);head.append(check,title);box.append(head);
+
+  if(p[2]){
+   const prev=document.createElement("div");
+   prev.className="previous";
+   prev.textContent="Прошлый результат: "+previous(p[0]);
+   box.append(prev);
+   d.sets.forEach((s,j)=>{
+    const row=document.createElement("div");row.className="set";
+    const label=document.createElement("span");
+    label.className="small";label.textContent="Подход "+(j+1);
+    const weight=document.createElement("input");
+    weight.type="number";weight.step="0.5";weight.min="0";
+    weight.placeholder="Вес, кг";weight.value=s.weight;
+    weight.inputMode="decimal";
+    weight.oninput=()=>s.weight=weight.value;
+    const reps=document.createElement("input");
+    reps.type="number";reps.min="0";reps.placeholder="Повторы";
+    reps.value=s.reps;reps.inputMode="numeric";
+    reps.oninput=()=>s.reps=reps.value;
+    row.append(label,weight,reps);box.append(row);
+   });
+  }
+  list.append(box);
+ });
+ document.getElementById("notes").value=draft.notes||"";
+ document.getElementById("notes").oninput=e=>draft.notes=e.target.value;
+ progress();
+}
+
+function progress(){
+ const total=plans[workout].length;
+ const done=plans[workout].filter((p,i)=>draft[workout+i]?.done).length;
+ document.getElementById("progressText").textContent=done+"/"+total;
+ document.getElementById("progressBar").style.width=(done/total*100)+"%";
+}
+function changeWorkout(w){
+ workout=w;
+ document.getElementById("btnA").classList.toggle("active",w==="A");
+ document.getElementById("btnB").classList.toggle("active",w==="B");
+ render();
+}
+function saveWorkout(){
+ const items=plans[workout].map((p,i)=>{
+  const d=draft[workout+i]||{};
+  return {name:p[0],done:!!d.done,sets:d.sets||[]};
+ });
+ if(!items.some(x=>x.done||x.sets.some(s=>s.weight||s.reps))){
+  if(!confirm("Пока нет отметок и записей. Всё равно сохранить тренировку?"))return;
+ }
+ records.push({
+  id:Date.now(),
+  date:new Date().toLocaleString("ru-RU"),
+  workout,items,notes:draft.notes||""
+ });
+ try{
+  localStorage.setItem(KEY,JSON.stringify(records));
+  draft={};render();
+  alert("Тренировка сохранена! 💪");
+ }catch(e){alert("Не удалось сохранить данные. Сделай экспорт истории и освободи место в браузере.")}
+}
+function showTab(tab){
+ ["train","history","stats"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==tab));
+ ["Train","History","Stats"].forEach(x=>document.getElementById("tab"+x).classList.toggle("active",x.toLowerCase()===tab));
+ if(tab==="history")renderHistory();
+ if(tab==="stats")renderStats();
+}
+function renderHistory(){
+ const el=document.getElementById("historyList");el.innerHTML="";
+ if(!records.length){el.textContent="История пока пустая. Сохрани первую тренировку!";return}
+ records.slice().reverse().forEach(r=>{
+  const d=document.createElement("div");d.className="item";
+  const title=document.createElement("b");
+  title.textContent=(r.workout==="A"?"Тренировка А":"Тренировка Б")+" · "+r.date;
+  d.append(title);
+  const detail=document.createElement("p");
+  detail.className="muted";
+  detail.textContent=r.items.map(x=>{
+   const sets=x.sets?.filter(s=>s.weight||s.reps).map(s=>(s.weight||"—")+" кг × "+(s.reps||"—")).join(", ");
+   return x.name+(sets?": "+sets:"")+(x.done?" ✓":"");
+  }).join(" | ");
+  d.append(detail);
+  if(r.notes){const n=document.createElement("p");n.className="muted";n.textContent="Заметки: "+r.notes;d.append(n)}
+  el.append(d);
+ });
+}
+function renderStats(){
+ const el=document.getElementById("statsContent");el.innerHTML="";
+ const a=records.filter(r=>r.workout==="A").length;
+ const b=records.filter(r=>r.workout==="B").length;
+ const total=document.createElement("h2");total.textContent="Всего тренировок: "+records.length;el.append(total);
+ const count=document.createElement("p");count.textContent="Тренировки А: "+a+" · Тренировки Б: "+b;el.append(count);
+ const best={};
+ records.forEach(r=>r.items.forEach(x=>(x.sets||[]).forEach(s=>{
+  const w=Number(s.weight);
+  if(w>0)best[x.name]=Math.max(best[x.name]||0,w);
+ })));
+ const heading=document.createElement("h3");heading.textContent="Лучшие записанные веса";el.append(heading);
+ if(!Object.keys(best).length){const p=document.createElement("p");p.textContent="Запиши рабочие веса — здесь появится прогресс.";el.append(p)}
+ Object.entries(best).forEach(([name,weight])=>{
+  const p=document.createElement("p");p.textContent=name+": "+weight+" кг";el.append(p);
+ });
+}
+function exportData(){
+ const blob=new Blob([JSON.stringify(records,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download="my-gym-diary-backup.json";a.click();
+ URL.revokeObjectURL(url);
+}
+render();
+</script>
+</body>
+</html>
